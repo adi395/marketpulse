@@ -5,8 +5,10 @@ import com.marketpulse.backend.dto.FundamentalsDto;
 import com.marketpulse.backend.dto.NewsArticleDto;
 import com.marketpulse.backend.dto.PriceBarDto;
 import com.marketpulse.backend.dto.QuoteDto;
+import com.marketpulse.backend.dto.SecFilingDto;
 import com.marketpulse.backend.service.ChartService;
 import com.marketpulse.backend.service.CompanyService;
+import com.marketpulse.backend.service.FilingsService;
 import com.marketpulse.backend.service.FundamentalsService;
 import com.marketpulse.backend.service.NewsService;
 import com.marketpulse.backend.service.QuoteService;
@@ -22,15 +24,17 @@ public class CompanyController {
     private final ChartService chartService;
     private final FundamentalsService fundamentalsService;
     private final NewsService newsService;
+    private final FilingsService filingsService;
 
     public CompanyController(CompanyService companyService, QuoteService quoteService,
                               ChartService chartService, FundamentalsService fundamentalsService,
-                              NewsService newsService) {
+                              NewsService newsService, FilingsService filingsService) {
         this.companyService = companyService;
         this.quoteService = quoteService;
         this.chartService = chartService;
         this.fundamentalsService = fundamentalsService;
         this.newsService = newsService;
+        this.filingsService = filingsService;
     }
 
     @GetMapping("/{ticker}")
@@ -56,5 +60,10 @@ public class CompanyController {
     @GetMapping("/{ticker}/news")
     public List<NewsArticleDto> getNews(@PathVariable String ticker) {
         return newsService.getCompanyNews(ticker);
+    }
+
+    @GetMapping("/{ticker}/filings")
+    public List<SecFilingDto> getFilings(@PathVariable String ticker) {
+        return filingsService.getFilings(ticker);
     }
 }
