@@ -1,6 +1,7 @@
 package com.marketpulse.backend.controller;
 
 import com.marketpulse.backend.dto.CompanyDto;
+import com.marketpulse.backend.dto.EarningsDto;
 import com.marketpulse.backend.dto.FundamentalsDto;
 import com.marketpulse.backend.dto.NewsArticleDto;
 import com.marketpulse.backend.dto.PriceBarDto;
@@ -8,6 +9,7 @@ import com.marketpulse.backend.dto.QuoteDto;
 import com.marketpulse.backend.dto.SecFilingDto;
 import com.marketpulse.backend.service.ChartService;
 import com.marketpulse.backend.service.CompanyService;
+import com.marketpulse.backend.service.EarningsService;
 import com.marketpulse.backend.service.FilingsService;
 import com.marketpulse.backend.service.FundamentalsService;
 import com.marketpulse.backend.service.NewsService;
@@ -25,16 +27,19 @@ public class CompanyController {
     private final FundamentalsService fundamentalsService;
     private final NewsService newsService;
     private final FilingsService filingsService;
+    private final EarningsService earningsService;
 
     public CompanyController(CompanyService companyService, QuoteService quoteService,
                               ChartService chartService, FundamentalsService fundamentalsService,
-                              NewsService newsService, FilingsService filingsService) {
+                              NewsService newsService, FilingsService filingsService,
+                              EarningsService earningsService) {
         this.companyService = companyService;
         this.quoteService = quoteService;
         this.chartService = chartService;
         this.fundamentalsService = fundamentalsService;
         this.newsService = newsService;
         this.filingsService = filingsService;
+        this.earningsService = earningsService;
     }
 
     @GetMapping("/{ticker}")
@@ -65,5 +70,10 @@ public class CompanyController {
     @GetMapping("/{ticker}/filings")
     public List<SecFilingDto> getFilings(@PathVariable String ticker) {
         return filingsService.getFilings(ticker);
+    }
+
+    @GetMapping("/{ticker}/earnings")
+    public List<EarningsDto> getEarnings(@PathVariable String ticker) {
+        return earningsService.getEarnings(ticker);
     }
 }
