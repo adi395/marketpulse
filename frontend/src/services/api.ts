@@ -1,3 +1,5 @@
+import type { Company, Quote, Fundamentals } from '../types/company'
+
 const API_BASE = 'http://localhost:8080/api'
 
 async function get<T>(path: string): Promise<T> {
@@ -9,11 +11,7 @@ async function get<T>(path: string): Promise<T> {
 }
 
 export const api = {
-  getCompany: (ticker: string) => get(`/companies/${ticker}`),
-  getQuote: (ticker: string) => get(`/companies/${ticker}/quote`),
-  getChart: (ticker: string) => get(`/companies/${ticker}/chart`),
-  getFundamentals: (ticker: string) => get(`/companies/${ticker}/fundamentals`),
-  getNews: (ticker: string) => get(`/companies/${ticker}/news`),
-  getFilings: (ticker: string) => get(`/companies/${ticker}/filings`),
-  getEarnings: (ticker: string) => get(`/companies/${ticker}/earnings`),
+  getCompany: (ticker: string) => get<Company>(`/companies/${ticker}`),
+  getQuote: (ticker: string) => get<Quote>(`/companies/${ticker}/quote`),
+  getFundamentals: (ticker: string) => get<Fundamentals>(`/companies/${ticker}/fundamentals`),
 }
