@@ -1,6 +1,7 @@
 package com.marketpulse.backend.provider;
 
 import com.marketpulse.backend.dto.QuoteDto;
+import com.marketpulse.backend.util.PercentChange;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -33,15 +34,23 @@ public class FinnhubMarketDataProvider implements MarketDataProvider {
             throw new RuntimeException("No quote data returned for " + ticker);
         }
 
+        Double current = toDouble(response.get("c"));
+        Double previousClose = toDouble(response.get("pc"));
+        Double percentChange = toDouble(response.get("dp"));
+        // Fall back to computing percent change ourselves if the provider omits it.
+        if (percentChange == null) {
+            percentChange = PercentChange.compute(current, previousClose);
+        }
+
         return QuoteDto.builder()
                 .ticker(ticker)
-                .currentPrice(toDouble(response.get("c")))
+                .currentPrice(current)
                 .change(toDouble(response.get("d")))
-                .percentChange(toDouble(response.get("dp")))
+                .percentChange(percentChange)
                 .dayHigh(toDouble(response.get("h")))
                 .dayLow(toDouble(response.get("l")))
                 .openPrice(toDouble(response.get("o")))
-                .previousClose(toDouble(response.get("pc")))
+                .previousClose(previousClose)
                 .timestamp(response.get("t") != null ? ((Number) response.get("t")).longValue() : null)
                 .build();
     }
