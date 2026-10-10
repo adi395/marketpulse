@@ -65,3 +65,13 @@ export interface SecFiling {
   filedDate: string
   filingUrl: string
 }
+
+export interface MarketMover {
+  ticker: string
+  name: string
+  sector: string
+  exchange: string
+  currentPrice: number | null
+  change: number | null
+  percentChange: number | null
+}
