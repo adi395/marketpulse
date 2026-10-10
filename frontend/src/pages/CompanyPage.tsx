@@ -19,6 +19,8 @@ import type {
 } from '../types/company'
 
 type Tab = 'overview' | 'news' | 'earnings' | 'filings'
+type Status = 'loading' | 'ok' | 'error'
+type ChartRange = '1M' | '3M' | '6M' | '1Y' | 'MAX'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'overview', label: 'Overview' },
@@ -26,6 +28,8 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'earnings', label: 'Earnings' },
   { id: 'filings', label: 'Filings' },
 ]
+
+const RANGES: ChartRange[] = ['1M', '3M', '6M', '1Y', 'MAX']
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
@@ -36,11 +40,25 @@ function Stat({ label, value }: { label: string; value: string }) {
   )
 }
 
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+function Panel({
+  title,
+  action,
+  source,
+  children,
+}: {
+  title: string
+  action?: React.ReactNode
+  source?: string
+  children: React.ReactNode
+}) {
   return (
     <div className="rounded-xl border border-border bg-surface p-5">
-      <div className="mb-4 text-sm font-medium text-ink-muted">{title}</div>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="text-sm font-medium text-ink-muted">{title}</div>
+        {action}
+      </div>
       {children}
+      {source && <div className="mt-4 text-[11px] text-ink-faint">Source: {source}</div>}
     </div>
   )
 }
@@ -50,24 +68,32 @@ export function CompanyPage() {
   const [company, setCompany] = useState<Company | null>(null)
   const [quote, setQuote] = useState<Quote | null>(null)
   const [fundamentals, setFundamentals] = useState<Fundamentals | null>(null)
-  const [chart, setChart] = useState<PriceBar[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const [tab, setTab] = useState<Tab>('overview')
-  const [news, setNews] = useState<NewsArticle[] | null>(null)
-  const [earnings, setEarnings] = useState<Earnings[] | null>(null)
-  const [filings, setFilings] = useState<SecFiling[] | null>(null)
 
+  const [chart, setChart] = useState<PriceBar[]>([])
+  const [chartStatus, setChartStatus] = useState<Status>('loading')
+  const [range, setRange] = useState<ChartRange>('6M')
+
+  const [news, setNews] = useState<NewsArticle[] | null>(null)
+  const [newsStatus, setNewsStatus] = useState<Status>('loading')
+  const [earnings, setEarnings] = useState<Earnings[] | null>(null)
+  const [earningsStatus, setEarningsStatus] = useState<Status>('loading')
+  const [filings, setFilings] = useState<SecFiling[] | null>(null)
+  const [filingsStatus, setFilingsStatus] = useState<Status>('loading')
+
+  // Core data: company, quote and fundamentals must load for the page to render.
   useEffect(() => {
     if (!ticker) return
     setLoading(true)
     setError(null)
     setTab('overview')
+    setRange('6M')
     setNews(null)
     setEarnings(null)
     setFilings(null)
-    setChart([])
 
     Promise.all([api.getCompany(ticker), api.getQuote(ticker), api.getFundamentals(ticker)])
       .then(([companyData, quoteData, fundamentalsData]) => {
@@ -77,21 +103,40 @@ export function CompanyPage() {
       })
       .catch(() => setError(`Could not load data for ${ticker}`))
       .finally(() => setLoading(false))
-
-    // Chart is best-effort: a failing/rate-limited chart feed should not
-    // blank out the company, quote and fundamentals that loaded fine.
-    api.getChart(ticker).then(setChart).catch(() => setChart([]))
   }, [ticker])
+
+  // Chart is best-effort and refetched when the range changes. A failing or
+  // rate-limited feed shows an explicit error rather than a blank page.
+  useEffect(() => {
+    if (!ticker) return
+    setChartStatus('loading')
+    api
+      .getChart(ticker, range)
+      .then((bars) => {
+        setChart(bars)
+        setChartStatus('ok')
+      })
+      .catch(() => {
+        setChart([])
+        setChartStatus('error')
+      })
+  }, [ticker, range])
 
   // Tab data is fetched lazily the first time each tab is opened.
   useEffect(() => {
     if (!ticker) return
     if (tab === 'news' && news === null) {
-      api.getNews(ticker).then(setNews).catch(() => setNews([]))
+      setNewsStatus('loading')
+      api.getNews(ticker).then((d) => { setNews(d); setNewsStatus('ok') })
+        .catch(() => { setNews([]); setNewsStatus('error') })
     } else if (tab === 'earnings' && earnings === null) {
-      api.getEarnings(ticker).then(setEarnings).catch(() => setEarnings([]))
+      setEarningsStatus('loading')
+      api.getEarnings(ticker).then((d) => { setEarnings(d); setEarningsStatus('ok') })
+        .catch(() => { setEarnings([]); setEarningsStatus('error') })
     } else if (tab === 'filings' && filings === null) {
-      api.getFilings(ticker).then(setFilings).catch(() => setFilings([]))
+      setFilingsStatus('loading')
+      api.getFilings(ticker).then((d) => { setFilings(d); setFilingsStatus('ok') })
+        .catch(() => { setFilings([]); setFilingsStatus('error') })
     }
   }, [tab, ticker, news, earnings, filings])
 
@@ -116,14 +161,32 @@ export function CompanyPage() {
     )
   }
 
+  const rangeSelector = (
+    <div className="flex gap-1" role="group" aria-label="Chart time range">
+      {RANGES.map((r) => (
+        <button
+          key={r}
+          type="button"
+          onClick={() => setRange(r)}
+          aria-pressed={range === r}
+          className={`rounded-md px-2 py-1 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
+            range === r ? 'bg-surface-2 text-ink' : 'text-ink-muted hover:text-ink'
+          }`}
+        >
+          {r}
+        </button>
+      ))}
+    </div>
+  )
+
   return (
     <div className="mx-auto max-w-7xl px-5 py-8">
       {/* Header */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded border border-border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-ink-faint">
+        <span className="rounded border border-border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-ink-muted">
           {company.exchange}
         </span>
-        <span className="text-xs text-ink-faint">{company.sector}</span>
+        <span className="text-xs text-ink-muted">{company.sector}</span>
       </div>
       <div className="mt-1.5 flex items-baseline gap-3">
         <h1 className="text-2xl font-bold tracking-tight text-ink">{company.name}</h1>
@@ -164,10 +227,9 @@ export function CompanyPage() {
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex-1 rounded-md px-4 py-1.5 text-sm font-medium transition-colors sm:flex-none ${
-              tab === t.id
-                ? 'bg-surface-2 text-ink'
-                : 'text-ink-muted hover:text-ink'
+            aria-pressed={tab === t.id}
+            className={`flex-1 rounded-md px-4 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 sm:flex-none ${
+              tab === t.id ? 'bg-surface-2 text-ink' : 'text-ink-muted hover:text-ink'
             }`}
           >
             {t.label}
@@ -179,30 +241,56 @@ export function CompanyPage() {
       <div className="mt-6">
         {tab === 'overview' && (
           <div className="space-y-6">
-            <Panel title="Price Chart">
-              <PriceChart data={chart} />
+            <Panel title="Price Chart" action={rangeSelector} source="Alpha Vantage">
+              {chartStatus === 'loading' ? (
+                <Skeleton className="h-72" />
+              ) : chartStatus === 'error' ? (
+                <div className="flex h-72 items-center justify-center text-sm text-ink-faint">
+                  Price history is temporarily unavailable.
+                </div>
+              ) : (
+                <PriceChart data={chart} />
+              )}
             </Panel>
-            <Panel title="Key Fundamentals">
+            <Panel title="Key Fundamentals" source="Finnhub">
               <FundamentalsPanel data={fundamentals} />
             </Panel>
           </div>
         )}
 
         {tab === 'news' && (
-          <Panel title="Recent News">
-            {news === null ? <Skeleton className="h-40" /> : <NewsList articles={news} />}
+          <Panel title="Recent News" source="Finnhub">
+            {news === null ? (
+              <Skeleton className="h-40" />
+            ) : newsStatus === 'error' ? (
+              <p className="text-sm text-ink-faint">News is temporarily unavailable.</p>
+            ) : (
+              <NewsList articles={news} />
+            )}
           </Panel>
         )}
 
         {tab === 'earnings' && (
-          <Panel title="Earnings History">
-            {earnings === null ? <Skeleton className="h-40" /> : <EarningsTable earnings={earnings} />}
+          <Panel title="Earnings History" source="Finnhub">
+            {earnings === null ? (
+              <Skeleton className="h-40" />
+            ) : earningsStatus === 'error' ? (
+              <p className="text-sm text-ink-faint">Earnings data is temporarily unavailable.</p>
+            ) : (
+              <EarningsTable earnings={earnings} />
+            )}
           </Panel>
         )}
 
         {tab === 'filings' && (
-          <Panel title="SEC Filings">
-            {filings === null ? <Skeleton className="h-40" /> : <FilingsList filings={filings} />}
+          <Panel title="SEC Filings" source="Finnhub / SEC EDGAR">
+            {filings === null ? (
+              <Skeleton className="h-40" />
+            ) : filingsStatus === 'error' ? (
+              <p className="text-sm text-ink-faint">Filings are temporarily unavailable.</p>
+            ) : (
+              <FilingsList filings={filings} />
+            )}
           </Panel>
         )}
       </div>

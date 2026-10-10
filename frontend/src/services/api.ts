@@ -23,7 +23,8 @@ export const api = {
   getCompany: (ticker: string) => get<Company>(`/companies/${ticker}`),
   getQuote: (ticker: string) => get<Quote>(`/companies/${ticker}/quote`),
   getFundamentals: (ticker: string) => get<Fundamentals>(`/companies/${ticker}/fundamentals`),
-  getChart: (ticker: string) => get<PriceBar[]>(`/companies/${ticker}/chart`),
+  getChart: (ticker: string, range = '6M') =>
+    get<PriceBar[]>(`/companies/${ticker}/chart?range=${encodeURIComponent(range)}`),
   getNews: (ticker: string) => get<NewsArticle[]>(`/companies/${ticker}/news`),
   getEarnings: (ticker: string) => get<Earnings[]>(`/companies/${ticker}/earnings`),
   getFilings: (ticker: string) => get<SecFiling[]>(`/companies/${ticker}/filings`),

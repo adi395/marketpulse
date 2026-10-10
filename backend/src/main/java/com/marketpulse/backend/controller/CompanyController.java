@@ -7,6 +7,7 @@ import com.marketpulse.backend.dto.NewsArticleDto;
 import com.marketpulse.backend.dto.PriceBarDto;
 import com.marketpulse.backend.dto.QuoteDto;
 import com.marketpulse.backend.dto.SecFilingDto;
+import com.marketpulse.backend.model.ChartRange;
 import com.marketpulse.backend.service.ChartService;
 import com.marketpulse.backend.service.CompanyService;
 import com.marketpulse.backend.service.EarningsService;
@@ -53,8 +54,9 @@ public class CompanyController {
     }
 
     @GetMapping("/{ticker}/chart")
-    public List<PriceBarDto> getChart(@PathVariable String ticker) {
-        return chartService.getHistoricalPrices(ticker);
+    public List<PriceBarDto> getChart(@PathVariable String ticker,
+                                      @RequestParam(defaultValue = "6M") String range) {
+        return chartService.getHistoricalPrices(ticker, ChartRange.fromParam(range));
     }
 
     @GetMapping("/{ticker}/fundamentals")
