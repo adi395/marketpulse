@@ -32,3 +32,12 @@ export interface Fundamentals {
   week52High: number | null
   week52Low: number | null
 }
+
+export interface PriceBar {
+  date: string
+  open: number
+  high: number
+  low: number
+  close: number
+  volume: number
+}

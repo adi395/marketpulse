@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { api } from '../services/api'
-import type { Company, Quote, Fundamentals } from '../types/company'
+import { PriceChart } from '../components/PriceChart'
+import type { Company, Quote, Fundamentals, PriceBar } from '../types/company'
 
 export function CompanyPage() {
   const { ticker } = useParams<{ ticker: string }>()
   const [company, setCompany] = useState<Company | null>(null)
   const [quote, setQuote] = useState<Quote | null>(null)
   const [fundamentals, setFundamentals] = useState<Fundamentals | null>(null)
+  const [chart, setChart] = useState<PriceBar[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -20,11 +22,13 @@ export function CompanyPage() {
       api.getCompany(ticker),
       api.getQuote(ticker),
       api.getFundamentals(ticker),
+      api.getChart(ticker),
     ])
-      .then(([companyData, quoteData, fundamentalsData]) => {
+      .then(([companyData, quoteData, fundamentalsData, chartData]) => {
         setCompany(companyData)
         setQuote(quoteData)
         setFundamentals(fundamentalsData)
+        setChart(chartData)
       })
       .catch(() => setError(`Could not load data for ${ticker}`))
       .finally(() => setLoading(false))
@@ -90,6 +94,11 @@ export function CompanyPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="mt-6 rounded border border-neutral-800 bg-neutral-900 p-5">
+        <div className="mb-4 text-sm text-neutral-400">Price Chart</div>
+        <PriceChart data={chart} />
       </div>
     </div>
   )

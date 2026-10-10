@@ -1,4 +1,4 @@
-import type { Company, Quote, Fundamentals } from '../types/company'
+import type { Company, Quote, Fundamentals, PriceBar } from '../types/company'
 
 const API_BASE = 'http://localhost:8080/api'
 
@@ -14,4 +14,5 @@ export const api = {
   getCompany: (ticker: string) => get<Company>(`/companies/${ticker}`),
   getQuote: (ticker: string) => get<Quote>(`/companies/${ticker}/quote`),
   getFundamentals: (ticker: string) => get<Fundamentals>(`/companies/${ticker}/fundamentals`),
+  getChart: (ticker: string) => get<PriceBar[]>(`/companies/${ticker}/chart`),
 }
