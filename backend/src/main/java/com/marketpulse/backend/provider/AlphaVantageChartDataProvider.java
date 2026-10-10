@@ -1,9 +1,7 @@
 package com.marketpulse.backend.provider;
 
-import com.marketpulse.backend.config.CacheConfig;
 import com.marketpulse.backend.dto.PriceBarDto;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -28,13 +26,12 @@ public class AlphaVantageChartDataProvider implements ChartDataProvider {
     }
 
     /**
-     * Fetches the full daily history once and caches it. Alpha Vantage charges
-     * the same single request for {@code outputsize=full} as for compact, so we
-     * pull the whole series and let the service slice it into time ranges
-     * without spending extra calls against the free-tier daily limit.
+     * Fetches the full daily history. Alpha Vantage charges the same single
+     * request for {@code outputsize=full} as for compact, so we pull the whole
+     * series and let the service slice it into time ranges. Caching, retry and
+     * stale fallback are handled by the ChartService's ResilientLoader.
      */
     @Override
-    @Cacheable(cacheNames = CacheConfig.CHARTS, key = "#ticker.toUpperCase()")
     @SuppressWarnings("unchecked")
     public List<PriceBarDto> getHistoricalPrices(String ticker) {
         Map<String, Object> response = restClient.get()

@@ -14,13 +14,14 @@ import java.time.Duration;
  * (Finnhub, Alpha Vantage). Each cache gets its own time-to-live tuned to how
  * often the underlying data actually changes, so we serve fresh-enough data
  * while staying well under the providers' free-tier request limits.
+ *
+ * <p>Quotes and charts are cached by their ResilientLoader instead (which also
+ * adds retry and last-good stale fallback), so they are not registered here.
  */
 @Configuration
 @EnableCaching
 public class CacheConfig {
 
-    public static final String QUOTES = "quotes";
-    public static final String CHARTS = "charts";
     public static final String FUNDAMENTALS = "fundamentals";
     public static final String NEWS = "news";
     public static final String EARNINGS = "earnings";
@@ -31,11 +32,6 @@ public class CacheConfig {
         CaffeineCacheManager manager = new CaffeineCacheManager();
         manager.setAllowNullValues(false);
 
-        // Intraday prices move constantly, so keep quotes only briefly.
-        manager.registerCustomCache(QUOTES, build(Duration.ofSeconds(30), 500));
-        // Daily OHLC bars change once a day; Alpha Vantage is the tightest
-        // free tier (25 calls/day), so cache aggressively.
-        manager.registerCustomCache(CHARTS, build(Duration.ofHours(6), 500));
         manager.registerCustomCache(FUNDAMENTALS, build(Duration.ofHours(1), 500));
         manager.registerCustomCache(NEWS, build(Duration.ofMinutes(15), 500));
         manager.registerCustomCache(EARNINGS, build(Duration.ofHours(6), 500));

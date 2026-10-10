@@ -4,12 +4,14 @@ import com.marketpulse.backend.dto.MarketMoverDto;
 import com.marketpulse.backend.dto.QuoteDto;
 import com.marketpulse.backend.model.Company;
 import com.marketpulse.backend.repository.CompanyRepository;
+import com.marketpulse.backend.resilience.ResilientLoader;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,12 +42,20 @@ class MarketServiceTest {
                 .currentPrice(100.0).change(1.0).percentChange(percentChange).timestamp(timestamp).build();
     }
 
+    private static ResilientLoader.Result<QuoteDto> fresh(QuoteDto q) {
+        return new ResilientLoader.Result<>(q, Instant.now(), false);
+    }
+
+    private static ResilientLoader.Result<QuoteDto> stale(QuoteDto q) {
+        return new ResilientLoader.Result<>(q, Instant.now(), true);
+    }
+
     @Test
     void overviewIsSortedByPercentChangeDescending() {
         when(companyRepository.findAll()).thenReturn(List.of(company("AAA"), company("BBB"), company("CCC")));
-        when(quoteService.getQuote("AAA")).thenReturn(quote(1.5));
-        when(quoteService.getQuote("BBB")).thenReturn(quote(5.0));
-        when(quoteService.getQuote("CCC")).thenReturn(quote(-2.0));
+        when(quoteService.getQuote("AAA")).thenReturn(fresh(quote(1.5)));
+        when(quoteService.getQuote("BBB")).thenReturn(fresh(quote(5.0)));
+        when(quoteService.getQuote("CCC")).thenReturn(fresh(quote(-2.0)));
 
         List<MarketMoverDto> companies = marketService.getOverview().companies();
 
@@ -55,7 +65,7 @@ class MarketServiceTest {
     @Test
     void failingQuoteIsSkippedRatherThanFailingTheWholeOverview() {
         when(companyRepository.findAll()).thenReturn(List.of(company("AAA"), company("BBB")));
-        when(quoteService.getQuote("AAA")).thenReturn(quote(1.0));
+        when(quoteService.getQuote("AAA")).thenReturn(fresh(quote(1.0)));
         when(quoteService.getQuote("BBB")).thenThrow(new RuntimeException("provider down"));
 
         List<MarketMoverDto> companies = marketService.getOverview().companies();
@@ -66,7 +76,7 @@ class MarketServiceTest {
     @Test
     void mapsQuoteFieldsOntoMover() {
         when(companyRepository.findAll()).thenReturn(List.of(company("AAA")));
-        when(quoteService.getQuote("AAA")).thenReturn(quote(3.25));
+        when(quoteService.getQuote("AAA")).thenReturn(fresh(quote(3.25)));
 
         MarketMoverDto mover = marketService.getOverview().companies().getFirst();
 
@@ -79,8 +89,8 @@ class MarketServiceTest {
     @Test
     void asOfIsTheLatestQuoteTimestampAndSourceIsSet() {
         when(companyRepository.findAll()).thenReturn(List.of(company("AAA"), company("BBB")));
-        when(quoteService.getQuote("AAA")).thenReturn(quote(1.0, 1_000L));
-        when(quoteService.getQuote("BBB")).thenReturn(quote(2.0, 2_000L));
+        when(quoteService.getQuote("AAA")).thenReturn(fresh(quote(1.0, 1_000L)));
+        when(quoteService.getQuote("BBB")).thenReturn(fresh(quote(2.0, 2_000L)));
 
         var overview = marketService.getOverview();
 
@@ -91,8 +101,25 @@ class MarketServiceTest {
     @Test
     void asOfIsNullWhenNoQuoteHasATimestamp() {
         when(companyRepository.findAll()).thenReturn(List.of(company("AAA")));
-        when(quoteService.getQuote("AAA")).thenReturn(quote(1.0));
+        when(quoteService.getQuote("AAA")).thenReturn(fresh(quote(1.0)));
 
         assertThat(marketService.getOverview().asOf()).isNull();
+    }
+
+    @Test
+    void overviewIsFlaggedStaleWhenAnyQuoteIsServedStale() {
+        when(companyRepository.findAll()).thenReturn(List.of(company("AAA"), company("BBB")));
+        when(quoteService.getQuote("AAA")).thenReturn(fresh(quote(1.0)));
+        when(quoteService.getQuote("BBB")).thenReturn(stale(quote(2.0)));
+
+        assertThat(marketService.getOverview().stale()).isTrue();
+    }
+
+    @Test
+    void overviewIsNotStaleWhenAllQuotesAreFresh() {
+        when(companyRepository.findAll()).thenReturn(List.of(company("AAA")));
+        when(quoteService.getQuote("AAA")).thenReturn(fresh(quote(1.0)));
+
+        assertThat(marketService.getOverview().stale()).isFalse();
     }
 }

@@ -96,12 +96,25 @@ export function Dashboard() {
                 </span>
                 <span className="text-ink-faint">·</span>
                 <span>Updated {timeAgo(overview.asOf)}</span>
-                <span
-                  className="rounded-md border border-border px-1.5 py-0.5 text-[11px] font-medium text-ink-muted"
-                  title="Live quotes, cached up to 30s and subject to exchange delay. Not real-time trading data."
-                >
-                  Delayed
-                </span>
+                {overview.stale ? (
+                  <span
+                    className="rounded-md px-1.5 py-0.5 text-[11px] font-medium"
+                    style={{
+                      color: 'var(--color-down)',
+                      backgroundColor: 'color-mix(in srgb, var(--color-down) 14%, transparent)',
+                    }}
+                    title="The provider is unavailable, so the last successfully fetched data is shown. It may be out of date."
+                  >
+                    Stale
+                  </span>
+                ) : (
+                  <span
+                    className="rounded-md border border-border px-1.5 py-0.5 text-[11px] font-medium text-ink-muted"
+                    title="Live quotes, cached up to 30s and subject to exchange delay. Not real-time trading data."
+                  >
+                    Delayed
+                  </span>
+                )}
               </>
             ) : (
               <span>Live quotes across tracked companies.</span>

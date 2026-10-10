@@ -5,6 +5,7 @@ import com.marketpulse.backend.dto.MarketOverviewDto;
 import com.marketpulse.backend.dto.QuoteDto;
 import com.marketpulse.backend.model.Company;
 import com.marketpulse.backend.repository.CompanyRepository;
+import com.marketpulse.backend.resilience.ResilientLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -35,10 +36,13 @@ public class MarketService {
     public MarketOverviewDto getOverview() {
         List<MarketMoverDto> movers = new ArrayList<>();
         Long asOf = null;
+        boolean stale = false;
 
         for (Company company : companyRepository.findAll()) {
             try {
-                QuoteDto quote = quoteService.getQuote(company.getTicker());
+                ResilientLoader.Result<QuoteDto> result = quoteService.getQuote(company.getTicker());
+                QuoteDto quote = result.value();
+                stale = stale || result.stale();
                 movers.add(toMover(company, quote));
                 if (quote.getTimestamp() != null) {
                     asOf = asOf == null ? quote.getTimestamp() : Math.max(asOf, quote.getTimestamp());
@@ -55,6 +59,7 @@ public class MarketService {
         return MarketOverviewDto.builder()
                 .source(SOURCE)
                 .asOf(asOf)
+                .stale(stale)
                 .companies(movers)
                 .build();
     }

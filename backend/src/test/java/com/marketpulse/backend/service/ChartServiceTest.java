@@ -42,28 +42,28 @@ class ChartServiceTest {
     @Test
     void oneMonthKeepsOnlyRecentBars() {
         provideFullSeries();
-        List<PriceBarDto> bars = chartService.getHistoricalPrices("AAPL", ChartRange.M1);
+        List<PriceBarDto> bars = chartService.getHistoricalPrices("AAPL", ChartRange.M1).bars();
         assertThat(bars).hasSize(1); // only the 5-day-old bar is within ~30 days
     }
 
     @Test
     void threeMonthsKeepsBarsWithinNinetyDays() {
         provideFullSeries();
-        List<PriceBarDto> bars = chartService.getHistoricalPrices("AAPL", ChartRange.M3);
+        List<PriceBarDto> bars = chartService.getHistoricalPrices("AAPL", ChartRange.M3).bars();
         assertThat(bars).hasSize(2); // 5 and 40 days old
     }
 
     @Test
     void oneYearKeepsBarsWithinaYear() {
         provideFullSeries();
-        List<PriceBarDto> bars = chartService.getHistoricalPrices("AAPL", ChartRange.Y1);
+        List<PriceBarDto> bars = chartService.getHistoricalPrices("AAPL", ChartRange.Y1).bars();
         assertThat(bars).hasSize(4); // all but the 400-day-old bar
     }
 
     @Test
     void maxReturnsTheFullSeriesUnfiltered() {
         provideFullSeries();
-        List<PriceBarDto> bars = chartService.getHistoricalPrices("AAPL", ChartRange.MAX);
+        List<PriceBarDto> bars = chartService.getHistoricalPrices("AAPL", ChartRange.MAX).bars();
         assertThat(bars).hasSize(5);
     }
 

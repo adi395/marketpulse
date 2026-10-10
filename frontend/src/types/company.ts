@@ -82,5 +82,6 @@ export interface MarketMover {
 export interface MarketOverview {
   source: string
   asOf: number | null
+  stale: boolean
   companies: MarketMover[]
 }
