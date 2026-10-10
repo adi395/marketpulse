@@ -1,6 +1,14 @@
-import type { Company, Quote, Fundamentals, PriceBar } from '../types/company'
+import type {
+  Company,
+  Quote,
+  Fundamentals,
+  PriceBar,
+  NewsArticle,
+  Earnings,
+  SecFiling,
+} from '../types/company'
 
-const API_BASE = 'http://localhost:8080/api'
+const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8080/api'
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`)
@@ -15,4 +23,7 @@ export const api = {
   getQuote: (ticker: string) => get<Quote>(`/companies/${ticker}/quote`),
   getFundamentals: (ticker: string) => get<Fundamentals>(`/companies/${ticker}/fundamentals`),
   getChart: (ticker: string) => get<PriceBar[]>(`/companies/${ticker}/chart`),
+  getNews: (ticker: string) => get<NewsArticle[]>(`/companies/${ticker}/news`),
+  getEarnings: (ticker: string) => get<Earnings[]>(`/companies/${ticker}/earnings`),
+  getFilings: (ticker: string) => get<SecFiling[]>(`/companies/${ticker}/filings`),
 }

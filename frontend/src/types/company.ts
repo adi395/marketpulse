@@ -41,3 +41,27 @@ export interface PriceBar {
   close: number
   volume: number
 }
+
+export interface NewsArticle {
+  headline: string
+  source: string
+  summary: string
+  url: string
+  imageUrl: string
+  publishedAt: number
+}
+
+export interface Earnings {
+  period: string
+  year: number
+  quarter: number
+  epsActual: number | null
+  epsEstimate: number | null
+  surprisePercent: number | null
+}
+
+export interface SecFiling {
+  formType: string
+  filedDate: string
+  filingUrl: string
+}
