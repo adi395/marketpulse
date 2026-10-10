@@ -1,12 +1,10 @@
 package com.marketpulse.backend.controller;
 
-import com.marketpulse.backend.dto.MarketMoverDto;
+import com.marketpulse.backend.dto.MarketOverviewDto;
 import com.marketpulse.backend.service.MarketService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/market")
@@ -18,7 +16,7 @@ public class MarketController {
     }
 
     @GetMapping("/overview")
-    public List<MarketMoverDto> getOverview() {
+    public MarketOverviewDto getOverview() {
         return marketService.getOverview();
     }
 }

@@ -78,3 +78,9 @@ export interface MarketMover {
   dayLow: number | null
   openPrice: number | null
 }
+
+export interface MarketOverview {
+  source: string
+  asOf: number | null
+  companies: MarketMover[]
+}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { num, ratio, pct, money, fromUnix, shortDate } from './format'
+import { num, ratio, pct, money, fromUnix, shortDate, timeAgo } from './format'
 
 describe('format helpers', () => {
   it('formats numbers and falls back to N/A for nullish/NaN', () => {
@@ -30,6 +30,15 @@ describe('format helpers', () => {
     const formatted = fromUnix(1609502400)
     expect(formatted).toContain('2021')
     expect(formatted).toContain('Jan')
+  })
+
+  it('formats relative time from a fixed "now"', () => {
+    const now = 1_000_000 * 1000 // fixed reference in ms
+    expect(timeAgo(1_000_000, now)).toBe('just now')
+    expect(timeAgo(1_000_000 - 120, now)).toBe('2m ago')
+    expect(timeAgo(1_000_000 - 7200, now)).toBe('2h ago')
+    expect(timeAgo(1_000_000 - 172800, now)).toBe('2d ago')
+    expect(timeAgo(null, now)).toBe('unknown')
   })
 
   it('normalizes backend datetime strings and passes through unparseable input', () => {

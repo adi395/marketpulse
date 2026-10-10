@@ -1,6 +1,7 @@
 package com.marketpulse.backend.service;
 
 import com.marketpulse.backend.dto.MarketMoverDto;
+import com.marketpulse.backend.dto.MarketOverviewDto;
 import com.marketpulse.backend.dto.QuoteDto;
 import com.marketpulse.backend.model.Company;
 import com.marketpulse.backend.repository.CompanyRepository;
@@ -8,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -20,6 +22,7 @@ import java.util.List;
 @Service
 public class MarketService {
     private static final Logger log = LoggerFactory.getLogger(MarketService.class);
+    private static final String SOURCE = "Finnhub";
 
     private final CompanyRepository companyRepository;
     private final QuoteService quoteService;
@@ -29,34 +32,45 @@ public class MarketService {
         this.quoteService = quoteService;
     }
 
-    public List<MarketMoverDto> getOverview() {
-        return companyRepository.findAll().stream()
-                .map(this::toMover)
-                .filter(java.util.Objects::nonNull)
-                .sorted(Comparator.comparing(
-                        MarketMoverDto::getPercentChange,
-                        Comparator.nullsLast(Comparator.reverseOrder())))
-                .toList();
+    public MarketOverviewDto getOverview() {
+        List<MarketMoverDto> movers = new ArrayList<>();
+        Long asOf = null;
+
+        for (Company company : companyRepository.findAll()) {
+            try {
+                QuoteDto quote = quoteService.getQuote(company.getTicker());
+                movers.add(toMover(company, quote));
+                if (quote.getTimestamp() != null) {
+                    asOf = asOf == null ? quote.getTimestamp() : Math.max(asOf, quote.getTimestamp());
+                }
+            } catch (Exception e) {
+                log.warn("Skipping {} in market overview: {}", company.getTicker(), e.getMessage());
+            }
+        }
+
+        movers.sort(Comparator.comparing(
+                MarketMoverDto::getPercentChange,
+                Comparator.nullsLast(Comparator.reverseOrder())));
+
+        return MarketOverviewDto.builder()
+                .source(SOURCE)
+                .asOf(asOf)
+                .companies(movers)
+                .build();
     }
 
-    private MarketMoverDto toMover(Company company) {
-        try {
-            QuoteDto quote = quoteService.getQuote(company.getTicker());
-            return MarketMoverDto.builder()
-                    .ticker(company.getTicker())
-                    .name(company.getName())
-                    .sector(company.getSector())
-                    .exchange(company.getExchange())
-                    .currentPrice(quote.getCurrentPrice())
-                    .change(quote.getChange())
-                    .percentChange(quote.getPercentChange())
-                    .dayHigh(quote.getDayHigh())
-                    .dayLow(quote.getDayLow())
-                    .openPrice(quote.getOpenPrice())
-                    .build();
-        } catch (Exception e) {
-            log.warn("Skipping {} in market overview: {}", company.getTicker(), e.getMessage());
-            return null;
-        }
+    private MarketMoverDto toMover(Company company, QuoteDto quote) {
+        return MarketMoverDto.builder()
+                .ticker(company.getTicker())
+                .name(company.getName())
+                .sector(company.getSector())
+                .exchange(company.getExchange())
+                .currentPrice(quote.getCurrentPrice())
+                .change(quote.getChange())
+                .percentChange(quote.getPercentChange())
+                .dayHigh(quote.getDayHigh())
+                .dayLow(quote.getDayLow())
+                .openPrice(quote.getOpenPrice())
+                .build();
     }
 }

@@ -9,7 +9,8 @@ export function MarketCard({ mover }: { mover: MarketMover }) {
   return (
     <Link
       to={`/company/${mover.ticker}`}
-      className="group relative block overflow-hidden rounded-xl border border-border bg-surface p-4 transition-all duration-150 hover:-translate-y-0.5 hover:border-border-strong hover:bg-surface-2 hover:shadow-lg hover:shadow-black/30"
+      aria-label={`${mover.name} (${mover.ticker})`}
+      className="group relative block overflow-hidden rounded-xl border border-border bg-surface p-4 transition-all duration-150 hover:-translate-y-0.5 hover:border-border-strong hover:bg-surface-2 hover:shadow-lg hover:shadow-black/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/70 focus-visible:ring-offset-2 focus-visible:ring-offset-base"
     >
       {/* Accent edge tinted by direction */}
       <span
@@ -20,9 +21,11 @@ export function MarketCard({ mover }: { mover: MarketMover }) {
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="text-sm font-semibold tracking-tight text-ink">{mover.ticker}</div>
-          <div className="truncate text-xs text-ink-muted">{mover.name}</div>
+          <div className="line-clamp-2 text-xs text-ink-muted" title={mover.name}>
+            {mover.name}
+          </div>
         </div>
-        <span className="shrink-0 rounded border border-border px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-ink-faint">
+        <span className="shrink-0 rounded border border-border px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-ink-muted">
           {mover.sector}
         </span>
       </div>

@@ -28,27 +28,38 @@ export function ChangePill({
   )
 }
 
-/** Thin track showing where the current price sits between the day's low and high. */
+/**
+ * Thin track showing where the current price sits between the day's low and
+ * high. Returns null when the range is unavailable so callers never render a
+ * misleading empty bar.
+ */
 export function DayRangeBar({
   low,
   high,
   current,
+  label = "Day range",
 }: {
   low: number | null
   high: number | null
   current: number | null
+  label?: string
 }) {
   if (low === null || high === null || current === null || high <= low) return null
   const pct = Math.min(100, Math.max(0, ((current - low) / (high - low)) * 100))
   return (
     <div>
-      <div className="relative h-1 w-full rounded-full bg-surface-2">
+      <div className="mb-1 text-[10px] uppercase tracking-wide text-ink-faint">{label}</div>
+      <div
+        className="relative h-1 w-full rounded-full bg-surface-2"
+        role="img"
+        aria-label={`${label}: ${money(low)} to ${money(high)}, currently ${money(current)}`}
+      >
         <div
           className="absolute top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full"
           style={{ left: `${pct}%`, backgroundColor: 'var(--color-accent)' }}
         />
       </div>
-      <div className="nums mt-1.5 flex justify-between text-[11px] text-ink-faint">
+      <div className="nums mt-1.5 flex justify-between text-[11px] text-ink-muted">
         <span>{money(low)}</span>
         <span>{money(high)}</span>
       </div>

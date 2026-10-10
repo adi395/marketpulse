@@ -27,6 +27,16 @@ export function fromUnix(seconds: number): string {
   })
 }
 
+/** Human "time ago" from a unix-seconds timestamp, e.g. "just now", "4m ago". */
+export function timeAgo(seconds: number | null | undefined, now = Date.now()): string {
+  if (seconds === null || seconds === undefined) return 'unknown'
+  const diffSec = Math.max(0, Math.round(now / 1000 - seconds))
+  if (diffSec < 45) return 'just now'
+  if (diffSec < 3600) return `${Math.round(diffSec / 60)}m ago`
+  if (diffSec < 86400) return `${Math.round(diffSec / 3600)}h ago`
+  return `${Math.round(diffSec / 86400)}d ago`
+}
+
 /** Normalizes the backend's "YYYY-MM-DD HH:mm:ss" / "YYYY-MM-DD" into a short date. */
 export function shortDate(value: string): string {
   const parsed = new Date(value.replace(' ', 'T'))

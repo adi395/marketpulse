@@ -6,7 +6,7 @@ import type {
   NewsArticle,
   Earnings,
   SecFiling,
-  MarketMover,
+  MarketOverview,
 } from '../types/company'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8080/api'
@@ -27,5 +27,5 @@ export const api = {
   getNews: (ticker: string) => get<NewsArticle[]>(`/companies/${ticker}/news`),
   getEarnings: (ticker: string) => get<Earnings[]>(`/companies/${ticker}/earnings`),
   getFilings: (ticker: string) => get<SecFiling[]>(`/companies/${ticker}/filings`),
-  getMarketOverview: () => get<MarketMover[]>(`/market/overview`),
+  getMarketOverview: () => get<MarketOverview>(`/market/overview`),
 }
