@@ -1,7 +1,9 @@
 package com.marketpulse.backend.service;
 
+import com.marketpulse.backend.config.CacheConfig;
 import com.marketpulse.backend.dto.PriceBarDto;
 import com.marketpulse.backend.provider.ChartDataProvider;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,6 +16,7 @@ public class ChartService {
         this.chartDataProvider = chartDataProvider;
     }
 
+    @Cacheable(cacheNames = CacheConfig.CHARTS, key = "#ticker.toUpperCase()")
     public List<PriceBarDto> getHistoricalPrices(String ticker) {
         return chartDataProvider.getHistoricalPrices(ticker.toUpperCase());
     }

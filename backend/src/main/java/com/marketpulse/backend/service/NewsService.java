@@ -1,7 +1,9 @@
 package com.marketpulse.backend.service;
 
+import com.marketpulse.backend.config.CacheConfig;
 import com.marketpulse.backend.dto.NewsArticleDto;
 import com.marketpulse.backend.provider.NewsProvider;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,6 +16,7 @@ public class NewsService {
         this.newsProvider = newsProvider;
     }
 
+    @Cacheable(cacheNames = CacheConfig.NEWS, key = "#ticker.toUpperCase()")
     public List<NewsArticleDto> getCompanyNews(String ticker) {
         return newsProvider.getCompanyNews(ticker.toUpperCase());
     }

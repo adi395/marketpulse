@@ -33,7 +33,15 @@ public class AlphaVantageChartDataProvider implements ChartDataProvider {
                 .retrieve()
                 .body(Map.class);
 
-        if (response == null || !response.containsKey("Time Series (Daily)")) {
+        if (response == null) {
+            throw new RuntimeException("No historical price data returned for " + ticker);
+        }
+        // Alpha Vantage returns 200 OK with a "Note"/"Information" message instead
+        // of data when the free-tier rate limit is hit; surface that clearly.
+        if (response.containsKey("Note") || response.containsKey("Information")) {
+            throw new RuntimeException("Alpha Vantage rate limit reached for " + ticker);
+        }
+        if (!response.containsKey("Time Series (Daily)")) {
             throw new RuntimeException("No historical price data returned for " + ticker);
         }
 
