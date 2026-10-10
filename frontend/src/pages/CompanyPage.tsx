@@ -22,16 +22,20 @@ export function CompanyPage() {
       api.getCompany(ticker),
       api.getQuote(ticker),
       api.getFundamentals(ticker),
-      api.getChart(ticker),
     ])
-      .then(([companyData, quoteData, fundamentalsData, chartData]) => {
+      .then(([companyData, quoteData, fundamentalsData]) => {
         setCompany(companyData)
         setQuote(quoteData)
         setFundamentals(fundamentalsData)
-        setChart(chartData)
       })
       .catch(() => setError(`Could not load data for ${ticker}`))
       .finally(() => setLoading(false))
+
+    // Chart is best-effort: a failing/rate-limited chart feed should not
+    // blank out the company, quote and fundamentals that loaded fine.
+    api.getChart(ticker)
+      .then(setChart)
+      .catch(() => setChart([]))
   }, [ticker])
 
   if (loading) {
