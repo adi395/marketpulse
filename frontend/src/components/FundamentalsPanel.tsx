@@ -3,11 +3,13 @@ import { ratio, pct, money } from '../utils/format'
 
 function Metric({ label, value, tone }: { label: string; value: string; tone?: 'up' | 'down' }) {
   const color =
-    tone === 'up' ? 'text-green-500' : tone === 'down' ? 'text-red-500' : 'text-neutral-200'
+    tone === 'up' ? 'var(--color-up)' : tone === 'down' ? 'var(--color-down)' : 'var(--color-ink)'
   return (
     <div>
-      <div className="text-xs text-neutral-500">{label}</div>
-      <div className={`text-sm font-medium ${color}`}>{value}</div>
+      <div className="text-xs text-ink-faint">{label}</div>
+      <div className="nums mt-0.5 text-sm font-medium" style={{ color }}>
+        {value}
+      </div>
     </div>
   )
 }
@@ -15,7 +17,7 @@ function Metric({ label, value, tone }: { label: string; value: string; tone?: '
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+      <div className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-ink-faint">
         {title}
       </div>
       <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">{children}</div>
@@ -30,7 +32,7 @@ function growthTone(value: number | null): 'up' | 'down' | undefined {
 
 export function FundamentalsPanel({ data }: { data: Fundamentals | null }) {
   if (!data) {
-    return <p className="text-sm text-neutral-500">No fundamentals available.</p>
+    return <p className="text-sm text-ink-faint">No fundamentals available.</p>
   }
 
   return (

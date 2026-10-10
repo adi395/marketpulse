@@ -13,6 +13,9 @@ function renderCard(overrides: Partial<MarketMover> = {}) {
     currentPrice: 336.64,
     change: -3.78,
     percentChange: -1.11,
+    dayHigh: 338.61,
+    dayLow: 330.7,
+    openPrice: 331.7,
     ...overrides,
   }
   return render(

@@ -1,31 +1,39 @@
 import { Link } from 'react-router-dom'
 import type { MarketMover } from '../types/company'
 import { money } from '../utils/format'
+import { ChangePill, DayRangeBar } from './ui'
 
 export function MarketCard({ mover }: { mover: MarketMover }) {
-  const pc = mover.percentChange
-  const isUp = (pc ?? 0) >= 0
-  const changeColor = pc === null ? 'text-neutral-500' : isUp ? 'text-green-500' : 'text-red-500'
-  const sign = isUp ? '+' : ''
+  const up = (mover.percentChange ?? 0) >= 0
 
   return (
     <Link
       to={`/company/${mover.ticker}`}
-      className="block rounded border border-neutral-800 bg-neutral-900 p-4 transition-colors hover:border-neutral-600 hover:bg-neutral-800"
+      className="group relative block overflow-hidden rounded-xl border border-border bg-surface p-4 transition-all duration-150 hover:-translate-y-0.5 hover:border-border-strong hover:bg-surface-2 hover:shadow-lg hover:shadow-black/30"
     >
-      <div className="flex items-start justify-between">
+      {/* Accent edge tinted by direction */}
+      <span
+        className="absolute inset-y-0 left-0 w-0.5 opacity-70"
+        style={{ backgroundColor: up ? 'var(--color-up)' : 'var(--color-down)' }}
+      />
+
+      <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <div className="text-sm font-semibold text-neutral-100">{mover.ticker}</div>
-          <div className="truncate text-xs text-neutral-500">{mover.name}</div>
+          <div className="text-sm font-semibold tracking-tight text-ink">{mover.ticker}</div>
+          <div className="truncate text-xs text-ink-muted">{mover.name}</div>
         </div>
-        <span className="shrink-0 text-xs text-neutral-600">{mover.sector}</span>
+        <span className="shrink-0 rounded border border-border px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-ink-faint">
+          {mover.sector}
+        </span>
       </div>
 
-      <div className="mt-4 flex items-baseline justify-between">
-        <span className="text-lg font-semibold text-neutral-100">{money(mover.currentPrice)}</span>
-        <span className={`text-sm font-medium ${changeColor}`}>
-          {pc === null ? 'N/A' : `${sign}${pc.toFixed(2)}%`}
-        </span>
+      <div className="mt-4 flex items-end justify-between">
+        <span className="nums text-xl font-semibold text-ink">{money(mover.currentPrice)}</span>
+        <ChangePill percent={mover.percentChange} size="sm" />
+      </div>
+
+      <div className="mt-4">
+        <DayRangeBar low={mover.dayLow} high={mover.dayHigh} current={mover.currentPrice} />
       </div>
     </Link>
   )

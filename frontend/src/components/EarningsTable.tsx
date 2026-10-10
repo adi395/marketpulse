@@ -3,14 +3,14 @@ import { money, pct } from '../utils/format'
 
 export function EarningsTable({ earnings }: { earnings: Earnings[] }) {
   if (earnings.length === 0) {
-    return <p className="text-sm text-neutral-500">No earnings history.</p>
+    return <p className="text-sm text-ink-faint">No earnings history.</p>
   }
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-neutral-800 text-left text-xs uppercase tracking-wide text-neutral-500">
+          <tr className="border-b border-border text-left text-[11px] uppercase tracking-wide text-ink-faint">
             <th className="py-2 pr-4 font-medium">Period</th>
             <th className="py-2 pr-4 font-medium">Qtr</th>
             <th className="py-2 pr-4 text-right font-medium">EPS Actual</th>
@@ -22,17 +22,23 @@ export function EarningsTable({ earnings }: { earnings: Earnings[] }) {
           {earnings.map((e) => {
             const beat = (e.surprisePercent ?? 0) >= 0
             return (
-              <tr key={e.period} className="border-b border-neutral-800/60">
-                <td className="py-2.5 pr-4 text-neutral-300">{e.period}</td>
-                <td className="py-2.5 pr-4 text-neutral-500">
+              <tr key={e.period} className="border-b border-border/60 last:border-0">
+                <td className="nums py-2.5 pr-4 text-ink">{e.period}</td>
+                <td className="py-2.5 pr-4 text-ink-muted">
                   Q{e.quarter} {e.year}
                 </td>
-                <td className="py-2.5 pr-4 text-right text-neutral-200">{money(e.epsActual)}</td>
-                <td className="py-2.5 pr-4 text-right text-neutral-400">{money(e.epsEstimate)}</td>
+                <td className="nums py-2.5 pr-4 text-right text-ink">{money(e.epsActual)}</td>
+                <td className="nums py-2.5 pr-4 text-right text-ink-muted">{money(e.epsEstimate)}</td>
                 <td
-                  className={`py-2.5 text-right font-medium ${
-                    e.surprisePercent === null ? 'text-neutral-500' : beat ? 'text-green-500' : 'text-red-500'
-                  }`}
+                  className="nums py-2.5 text-right font-medium"
+                  style={{
+                    color:
+                      e.surprisePercent === null
+                        ? 'var(--color-ink-faint)'
+                        : beat
+                          ? 'var(--color-up)'
+                          : 'var(--color-down)',
+                  }}
                 >
                   {e.surprisePercent === null ? 'N/A' : `${beat ? '+' : ''}${pct(e.surprisePercent)}`}
                 </td>

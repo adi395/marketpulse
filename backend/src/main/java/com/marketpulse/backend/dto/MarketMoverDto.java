@@ -11,4 +11,7 @@ public class MarketMoverDto {
     private Double currentPrice;
     private Double change;
     private Double percentChange;
+    private Double dayHigh;
+    private Double dayLow;
+    private Double openPrice;
 }

@@ -1,1 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* Layered dark surfaces (not pure black) */
+  --color-base: #0a0c10;
+  --color-surface: #13161c;
+  --color-surface-2: #191d25;
+  --color-border: #232a34;
+  --color-border-strong: #333c49;
+
+  /* Text */
+  --color-ink: #e9edf3;
+  --color-ink-muted: #96a1b2;
+  --color-ink-faint: #626c7c;
+
+  /* Brand accent (distinct from the up/down greens and reds) */
+  --color-accent: #6b8afd;
+  --color-accent-soft: #93a9ff;
+
+  /* Market direction */
+  --color-up: #1fc686;
+  --color-down: #f05a68;
+}
+
+@layer base {
+  html {
+    background-color: var(--color-base);
+  }
+  body {
+    margin: 0;
+    background-color: var(--color-base);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  /* Financial figures line up column-to-column */
+  .nums {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+}

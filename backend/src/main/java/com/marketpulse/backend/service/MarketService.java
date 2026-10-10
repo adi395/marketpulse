@@ -50,6 +50,9 @@ public class MarketService {
                     .currentPrice(quote.getCurrentPrice())
                     .change(quote.getChange())
                     .percentChange(quote.getPercentChange())
+                    .dayHigh(quote.getDayHigh())
+                    .dayLow(quote.getDayLow())
+                    .openPrice(quote.getOpenPrice())
                     .build();
         } catch (Exception e) {
             log.warn("Skipping {} in market overview: {}", company.getTicker(), e.getMessage());

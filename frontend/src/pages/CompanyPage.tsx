@@ -6,6 +6,7 @@ import { FundamentalsPanel } from '../components/FundamentalsPanel'
 import { NewsList } from '../components/NewsList'
 import { EarningsTable } from '../components/EarningsTable'
 import { FilingsList } from '../components/FilingsList'
+import { ChangePill, Skeleton } from '../components/ui'
 import { money } from '../utils/format'
 import type {
   Company,
@@ -26,6 +27,24 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'filings', label: 'Filings' },
 ]
 
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="text-xs text-ink-faint">{label}</div>
+      <div className="nums mt-0.5 text-sm font-medium text-ink">{value}</div>
+    </div>
+  )
+}
+
+function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-border bg-surface p-5">
+      <div className="mb-4 text-sm font-medium text-ink-muted">{title}</div>
+      {children}
+    </div>
+  )
+}
+
 export function CompanyPage() {
   const { ticker } = useParams<{ ticker: string }>()
   const [company, setCompany] = useState<Company | null>(null)
@@ -40,7 +59,6 @@ export function CompanyPage() {
   const [earnings, setEarnings] = useState<Earnings[] | null>(null)
   const [filings, setFilings] = useState<SecFiling[] | null>(null)
 
-  // Core data: company, quote and fundamentals must load for the page to render.
   useEffect(() => {
     if (!ticker) return
     setLoading(true)
@@ -49,6 +67,7 @@ export function CompanyPage() {
     setNews(null)
     setEarnings(null)
     setFilings(null)
+    setChart([])
 
     Promise.all([api.getCompany(ticker), api.getQuote(ticker), api.getFundamentals(ticker)])
       .then(([companyData, quoteData, fundamentalsData]) => {
@@ -78,73 +97,77 @@ export function CompanyPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-6">
-        <p className="text-sm text-neutral-500">Loading {ticker}...</p>
+      <div className="mx-auto max-w-7xl px-5 py-8">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="mt-3 h-7 w-64" />
+        <Skeleton className="mt-6 h-32 w-full" />
+        <Skeleton className="mt-6 h-72 w-full" />
       </div>
     )
   }
 
   if (error || !company || !quote) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-6">
-        <p className="text-sm text-red-400">{error ?? 'Something went wrong.'}</p>
+      <div className="mx-auto max-w-7xl px-5 py-8">
+        <div className="rounded-xl border border-border bg-surface p-5 text-sm text-ink-muted">
+          {error ?? 'Something went wrong.'}
+        </div>
       </div>
     )
   }
 
-  const isUp = quote.change >= 0
-  const changeColor = isUp ? 'text-green-500' : 'text-red-500'
-  const sign = isUp ? '+' : ''
-
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6">
-      <div className="mb-1 text-xs uppercase tracking-wide text-neutral-500">
-        {company.exchange} · {company.sector}
+    <div className="mx-auto max-w-7xl px-5 py-8">
+      {/* Header */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded border border-border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-ink-faint">
+          {company.exchange}
+        </span>
+        <span className="text-xs text-ink-faint">{company.sector}</span>
       </div>
-      <h1 className="text-xl font-semibold text-neutral-100">{company.name}</h1>
-      <div className="mb-6 text-sm text-neutral-500">{company.ticker}</div>
+      <div className="mt-1.5 flex items-baseline gap-3">
+        <h1 className="text-2xl font-bold tracking-tight text-ink">{company.name}</h1>
+        <span className="text-sm text-ink-faint">{company.ticker}</span>
+      </div>
 
-      <div className="rounded border border-neutral-800 bg-neutral-900 p-5">
-        <div className="flex items-baseline gap-3">
-          <span className="text-3xl font-semibold text-neutral-100">
+      {/* Price card */}
+      <div className="mt-5 rounded-xl border border-border bg-surface p-5">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="nums text-4xl font-semibold tracking-tight text-ink">
             {money(quote.currentPrice)}
           </span>
-          <span className={`text-sm font-medium ${changeColor}`}>
-            {sign}
-            {quote.change.toFixed(2)} ({sign}
-            {quote.percentChange.toFixed(2)}%)
+          <ChangePill percent={quote.percentChange} />
+          <span
+            className="nums text-sm"
+            style={{ color: quote.change >= 0 ? 'var(--color-up)' : 'var(--color-down)' }}
+          >
+            {quote.change >= 0 ? '+' : ''}
+            {quote.change.toFixed(2)} today
           </span>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-4 border-t border-neutral-800 pt-4 text-sm sm:grid-cols-4">
-          <div>
-            <div className="text-neutral-500">Day High</div>
-            <div className="text-neutral-200">{money(quote.dayHigh)}</div>
-          </div>
-          <div>
-            <div className="text-neutral-500">Day Low</div>
-            <div className="text-neutral-200">{money(quote.dayLow)}</div>
-          </div>
-          <div>
-            <div className="text-neutral-500">52W High</div>
-            <div className="text-neutral-200">{money(fundamentals?.week52High)}</div>
-          </div>
-          <div>
-            <div className="text-neutral-500">52W Low</div>
-            <div className="text-neutral-200">{money(fundamentals?.week52Low)}</div>
-          </div>
+        <div className="mt-5 grid grid-cols-2 gap-4 border-t border-border pt-4 sm:grid-cols-5">
+          <Stat label="Open" value={money(quote.openPrice)} />
+          <Stat label="Prev Close" value={money(quote.previousClose)} />
+          <Stat label="Day High" value={money(quote.dayHigh)} />
+          <Stat label="Day Low" value={money(quote.dayLow)} />
+          <Stat
+            label="52W Range"
+            value={`${money(fundamentals?.week52Low)} – ${money(fundamentals?.week52High)}`}
+          />
         </div>
       </div>
 
-      <div className="mt-6 flex gap-1 border-b border-neutral-800">
+      {/* Tabs */}
+      <div className="mt-6 flex gap-1 rounded-lg border border-border bg-surface p-1">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`-mb-px border-b-2 px-4 py-2 text-sm transition-colors ${
+            className={`flex-1 rounded-md px-4 py-1.5 text-sm font-medium transition-colors sm:flex-none ${
               tab === t.id
-                ? 'border-neutral-100 text-neutral-100'
-                : 'border-transparent text-neutral-500 hover:text-neutral-300'
+                ? 'bg-surface-2 text-ink'
+                : 'text-ink-muted hover:text-ink'
             }`}
           >
             {t.label}
@@ -152,48 +175,35 @@ export function CompanyPage() {
         ))}
       </div>
 
+      {/* Tab content */}
       <div className="mt-6">
         {tab === 'overview' && (
           <div className="space-y-6">
-            <div className="rounded border border-neutral-800 bg-neutral-900 p-5">
-              <div className="mb-4 text-sm text-neutral-400">Price Chart</div>
+            <Panel title="Price Chart">
               <PriceChart data={chart} />
-            </div>
-            <div className="rounded border border-neutral-800 bg-neutral-900 p-5">
-              <div className="mb-4 text-sm text-neutral-400">Key Fundamentals</div>
+            </Panel>
+            <Panel title="Key Fundamentals">
               <FundamentalsPanel data={fundamentals} />
-            </div>
+            </Panel>
           </div>
         )}
 
         {tab === 'news' && (
-          <div className="rounded border border-neutral-800 bg-neutral-900 p-5">
-            {news === null ? (
-              <p className="text-sm text-neutral-500">Loading news...</p>
-            ) : (
-              <NewsList articles={news} />
-            )}
-          </div>
+          <Panel title="Recent News">
+            {news === null ? <Skeleton className="h-40" /> : <NewsList articles={news} />}
+          </Panel>
         )}
 
         {tab === 'earnings' && (
-          <div className="rounded border border-neutral-800 bg-neutral-900 p-5">
-            {earnings === null ? (
-              <p className="text-sm text-neutral-500">Loading earnings...</p>
-            ) : (
-              <EarningsTable earnings={earnings} />
-            )}
-          </div>
+          <Panel title="Earnings History">
+            {earnings === null ? <Skeleton className="h-40" /> : <EarningsTable earnings={earnings} />}
+          </Panel>
         )}
 
         {tab === 'filings' && (
-          <div className="rounded border border-neutral-800 bg-neutral-900 p-5">
-            {filings === null ? (
-              <p className="text-sm text-neutral-500">Loading filings...</p>
-            ) : (
-              <FilingsList filings={filings} />
-            )}
-          </div>
+          <Panel title="SEC Filings">
+            {filings === null ? <Skeleton className="h-40" /> : <FilingsList filings={filings} />}
+          </Panel>
         )}
       </div>
     </div>

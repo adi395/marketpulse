@@ -6,7 +6,7 @@ import { CompanyPage } from './pages/CompanyPage'
 function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-neutral-950">
+      <div className="min-h-screen bg-base">
         <Navbar />
         <Routes>
           <Route path="/" element={<Dashboard />} />

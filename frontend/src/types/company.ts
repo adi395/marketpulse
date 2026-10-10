@@ -74,4 +74,7 @@ export interface MarketMover {
   currentPrice: number | null
   change: number | null
   percentChange: number | null
+  dayHigh: number | null
+  dayLow: number | null
+  openPrice: number | null
 }
