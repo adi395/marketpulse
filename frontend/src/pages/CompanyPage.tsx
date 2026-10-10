@@ -84,6 +84,8 @@ export function CompanyPage() {
   const [filings, setFilings] = useState<SecFiling[] | null>(null)
   const [filingsStatus, setFilingsStatus] = useState<Status>('loading')
 
+  const [inWatchlist, setInWatchlist] = useState<boolean | null>(null)
+
   // Core data: company, quote and fundamentals must load for the page to render.
   useEffect(() => {
     if (!ticker) return
@@ -121,6 +123,25 @@ export function CompanyPage() {
         setChartStatus('error')
       })
   }, [ticker, range])
+
+  // Whether this company is on the user's watchlist.
+  useEffect(() => {
+    if (!ticker) return
+    setInWatchlist(null)
+    api
+      .getWatchlist()
+      .then((items) => setInWatchlist(items.some((i) => i.ticker === ticker.toUpperCase())))
+      .catch(() => setInWatchlist(false))
+  }, [ticker])
+
+  function toggleWatchlist() {
+    if (!ticker || inWatchlist === null) return
+    const t = ticker.toUpperCase()
+    const next = !inWatchlist
+    setInWatchlist(next) // optimistic
+    const req = next ? api.addToWatchlist(t) : api.removeFromWatchlist(t)
+    req.catch(() => setInWatchlist(!next)) // revert on failure
+  }
 
   // Tab data is fetched lazily the first time each tab is opened.
   useEffect(() => {
@@ -188,9 +209,24 @@ export function CompanyPage() {
         </span>
         <span className="text-xs text-ink-muted">{company.sector}</span>
       </div>
-      <div className="mt-1.5 flex items-baseline gap-3">
-        <h1 className="text-2xl font-bold tracking-tight text-ink">{company.name}</h1>
-        <span className="text-sm text-ink-faint">{company.ticker}</span>
+      <div className="mt-1.5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-baseline gap-3">
+          <h1 className="text-2xl font-bold tracking-tight text-ink">{company.name}</h1>
+          <span className="text-sm text-ink-faint">{company.ticker}</span>
+        </div>
+        <button
+          type="button"
+          onClick={toggleWatchlist}
+          disabled={inWatchlist === null}
+          aria-pressed={!!inWatchlist}
+          className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-50 ${
+            inWatchlist
+              ? 'border-accent/60 text-accent'
+              : 'border-border text-ink-muted hover:text-ink'
+          }`}
+        >
+          {inWatchlist ? '★ In Watchlist' : '☆ Watchlist'}
+        </button>
       </div>
 
       {/* Price card */}

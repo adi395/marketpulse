@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api } from '../services/api'
 import { MarketCard } from '../components/MarketCard'
+import { WatchlistSection } from '../components/WatchlistSection'
 import { ChangePill, Skeleton } from '../components/ui'
 import { timeAgo } from '../utils/format'
 import type { MarketOverview, MarketMover } from '../types/company'
@@ -84,10 +85,14 @@ export function Dashboard() {
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-8">
+      <h1 className="sr-only">Dashboard</h1>
+
+      <WatchlistSection />
+
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-ink">Market Overview</h1>
+          <h2 className="text-2xl font-bold tracking-tight text-ink">Market Overview</h2>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-muted">
             {overview ? (
               <>

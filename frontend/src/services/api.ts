@@ -1,3 +1,4 @@
+import { getUserId } from '../utils/user'
 import type {
   Company,
   Quote,
@@ -7,6 +8,7 @@ import type {
   Earnings,
   SecFiling,
   MarketOverview,
+  MarketMover,
 } from '../types/company'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8080/api'
@@ -19,6 +21,18 @@ async function get<T>(path: string): Promise<T> {
   return res.json()
 }
 
+/** Watchlist calls carry the per-browser user id so the server scopes them. */
+async function watchlist<T>(path: string, method: 'GET' | 'POST' | 'DELETE'): Promise<T> {
+  const res = await fetch(`${API_BASE}/watchlist${path}`, {
+    method,
+    headers: { 'X-User-Id': getUserId() },
+  })
+  if (!res.ok) {
+    throw new Error(`API error ${res.status}: ${path}`)
+  }
+  return (res.status === 204 ? undefined : await res.json()) as T
+}
+
 export const api = {
   getCompany: (ticker: string) => get<Company>(`/companies/${ticker}`),
   getQuote: (ticker: string) => get<Quote>(`/companies/${ticker}/quote`),
@@ -29,4 +43,9 @@ export const api = {
   getEarnings: (ticker: string) => get<Earnings[]>(`/companies/${ticker}/earnings`),
   getFilings: (ticker: string) => get<SecFiling[]>(`/companies/${ticker}/filings`),
   getMarketOverview: () => get<MarketOverview>(`/market/overview`),
+  getWatchlist: () => watchlist<MarketMover[]>('', 'GET'),
+  addToWatchlist: (ticker: string) =>
+    watchlist<void>(`/${encodeURIComponent(ticker)}`, 'POST'),
+  removeFromWatchlist: (ticker: string) =>
+    watchlist<void>(`/${encodeURIComponent(ticker)}`, 'DELETE'),
 }
